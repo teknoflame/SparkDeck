@@ -176,6 +176,7 @@ class SparkDeckApp {
         this.cancelDeckBtn = document.getElementById('cancel-deck-btn');
         this.createTabHeading = document.getElementById('create-tab-heading');
         this.cancelCardEditBtn = document.getElementById('cancel-card-edit-btn');
+        this.deckShuffle = document.getElementById('deck-shuffle');
 
         // Study overlay elements
         this.studyOverlay = document.getElementById('study-overlay');
@@ -1785,12 +1786,13 @@ class SparkDeckApp {
                         <button type="button" role="menuitem" class="deck-menu-item" data-action="edit" data-deck-index="${deckIndex}">Edit Cards</button>
                         <button type="button" role="menuitem" class="deck-menu-item" data-action="export" data-deck-index="${deckIndex}">Export</button>
                         <button type="button" role="menuitem" class="deck-menu-item" data-action="move" data-deck-index="${deckIndex}">Move to Folder…</button>
+                        <button type="button" role="menuitem" class="deck-menu-item" data-action="toggle-shuffle" data-deck-index="${deckIndex}">${deck.shuffle === false ? 'Enable Shuffle' : 'Disable Shuffle'}</button>
                         <div class="deck-menu-separator" role="separator"></div>
                         <button type="button" role="menuitem" class="deck-menu-item deck-menu-item--danger" data-action="delete" data-deck-index="${deckIndex}">Delete</button>
                     </div>
                 </div>
             </div>
-            <p>${deck.cards.length} cards &bull; ${safeCategory}</p>
+            <p>${deck.cards.length} cards &bull; ${safeCategory}${deck.shuffle === false ? ' &bull; Sequential' : ''}</p>
             <div class="button-group deck-actions">
                 <button type="button" class="deck-study-btn" data-deck-index="${deckIndex}" aria-label="Study deck ${safeName}">Study</button>
                 <button type="button" class="deck-quiz-btn" data-deck-index="${deckIndex}" aria-label="Quiz deck ${safeName}" ${deck.cards.length < 4 ? 'disabled title="Need at least 4 cards for quiz"' : ''}>Quiz</button>
@@ -1945,6 +1947,9 @@ class SparkDeckApp {
             case 'move':
                 await this.promptMoveDeck(deckIndex);
                 break;
+            case 'toggle-shuffle':
+                this.toggleDeckShuffle(deckIndex);
+                break;
             case 'delete':
                 await this.deleteDeck(deckIndex);
                 break;
@@ -1990,6 +1995,9 @@ class SparkDeckApp {
 
         this.populateFolderOptions(this.deckFolder, deck.folderId || '');
         this.deckFolder.value = deck.folderId || '';
+
+        // Load shuffle setting (default to true for old decks without the property)
+        if (this.deckShuffle) this.deckShuffle.checked = deck.shuffle !== false;
 
         // Load cards into tempCards (create copies to avoid mutating original)
         this.tempCards = deck.cards.map(card => ({ ...card }));
@@ -2278,6 +2286,7 @@ class SparkDeckApp {
         const name = this.deckName.value.trim();
         const category = this.getSelectedCategory();
         const folderId = this.deckFolder.value || null;
+        const shuffle = this.deckShuffle ? this.deckShuffle.checked : true;
 
         if (!name) {
             this.announce('Please enter a deck name.');
@@ -2296,6 +2305,7 @@ class SparkDeckApp {
             existingDeck.name = name;
             existingDeck.category = category;
             existingDeck.folderId = folderId;
+            existingDeck.shuffle = shuffle;
             existingDeck.cards = this.tempCards;
             // Keep original created date
 
@@ -2309,7 +2319,7 @@ class SparkDeckApp {
             }
         } else {
             // Create new deck
-            const deck = { name, category, folderId, cards: this.tempCards, created: new Date().toISOString() };
+            const deck = { name, category, folderId, shuffle, cards: this.tempCards, created: new Date().toISOString() };
 
             this.decks.push(deck);
             if (this.saveDecks()) {
@@ -2355,7 +2365,19 @@ class SparkDeckApp {
         // Reset custom category
         if (this.customCategoryWrapper) this.customCategoryWrapper.classList.add('hidden');
         if (this.customCategoryInput) this.customCategoryInput.value = '';
+        // Reset shuffle to default (on)
+        if (this.deckShuffle) this.deckShuffle.checked = true;
         this.updateCreateTabForEditMode();
+    }
+
+    toggleDeckShuffle(deckIndex) {
+        const deck = this.decks[deckIndex];
+        if (!deck) return;
+        deck.shuffle = deck.shuffle === false ? true : false;
+        this.saveDecks();
+        this.renderDecks();
+        const state = deck.shuffle ? 'enabled' : 'disabled';
+        this.announce(`Shuffle ${state} for "${deck.name}".`);
     }
 
     async deleteDeck(index) {
@@ -2393,10 +2415,11 @@ class SparkDeckApp {
 
         this.soundManager.play('enterStudy');
 
-        // Create a shuffled copy of the cards
+        // Create a copy of the cards, shuffled unless deck has shuffle disabled
+        const shouldShuffle = deck.shuffle !== false;
         this.currentDeck = {
             ...deck,
-            cards: this.shuffleArray(deck.cards)
+            cards: shouldShuffle ? this.shuffleArray(deck.cards) : [...deck.cards]
         };
         this.currentCardIndex = 0;
         this.showingFront = true;
@@ -2410,7 +2433,8 @@ class SparkDeckApp {
         document.body.style.overflow = 'hidden';
 
         this.displayCurrentCard();
-        this.announce(`Started studying "${deck.name}" with ${deck.cards.length} shuffled cards.`);
+        const orderText = shouldShuffle ? 'shuffled' : 'in order';
+        this.announce(`Started studying "${deck.name}" with ${deck.cards.length} cards ${orderText}.`);
         this.flashcard.focus();
     }
 
@@ -2555,7 +2579,8 @@ class SparkDeckApp {
         const deck = this.decks[deckIndex];
 
         this.quizMode = mode;
-        this.quizCards = this.shuffleArray(deck.cards);
+        const shouldShuffle = deck.shuffle !== false;
+        this.quizCards = shouldShuffle ? this.shuffleArray(deck.cards) : [...deck.cards];
         this.quizCurrentIndex = 0;
         this.quizScore = 0;
         this.quizAnswered = false;

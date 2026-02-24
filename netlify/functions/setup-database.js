@@ -34,6 +34,9 @@ const SCHEMA_STATEMENTS = [
     // --- Add visibility to decks (for future public/unlisted sharing) ---
     "ALTER TABLE decks ADD COLUMN IF NOT EXISTS visibility TEXT DEFAULT 'private'",
 
+    // --- Add shuffle to decks (per-deck shuffle toggle, defaults to true) ---
+    "ALTER TABLE decks ADD COLUMN IF NOT EXISTS shuffle BOOLEAN DEFAULT true",
+
     // --- Add media_url to cards (for YouTube embeds on card backs) ---
     "ALTER TABLE cards ADD COLUMN IF NOT EXISTS media_url TEXT",
 

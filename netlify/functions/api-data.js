@@ -32,7 +32,7 @@ async function loadUserData(dbUserId) {
 
     // Load decks
     const decksResult = await query(
-        `SELECT id, name, category, visibility, folder_id, created_at
+        `SELECT id, name, category, visibility, shuffle, folder_id, created_at
          FROM decks WHERE user_id = $1 ORDER BY created_at`,
         [dbUserId]
     );
@@ -87,6 +87,7 @@ async function loadUserData(dbUserId) {
         name: d.name,
         category: d.category || "",
         visibility: d.visibility || "private",
+        shuffle: d.shuffle !== false,
         folderId: d.folder_id ? String(d.folder_id) : null,
         cards: cardsMap[d.id] || [],
         created: d.created_at ? d.created_at.toISOString() : new Date().toISOString(),
@@ -186,13 +187,14 @@ async function saveUserData(dbUserId, data) {
                     : null;
 
                 const deckResult = await client.query(
-                    `INSERT INTO decks (name, category, visibility, folder_id, user_id, created_at)
-                     VALUES ($1, $2, $3, $4, $5, $6)
+                    `INSERT INTO decks (name, category, visibility, shuffle, folder_id, user_id, created_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7)
                      RETURNING id`,
                     [
                         deck.name,
                         deck.category || null,
                         deck.visibility || "private",
+                        deck.shuffle !== false,
                         folderId,
                         dbUserId,
                         deck.created || new Date().toISOString(),

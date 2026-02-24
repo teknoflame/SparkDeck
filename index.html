@@ -128,6 +128,19 @@
             color: #3498db;
         }
 
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+
         .button-group {
             display: flex;
             gap: 10px;
@@ -1980,6 +1993,14 @@
                     </select>
                     <div id="deck-folder-help" class="sr-only">Choose a folder to save this deck into. Select "New folder…" to create one.</div>
 
+                    <div class="deck-shuffle-option" style="margin-top: 16px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="deck-shuffle" checked>
+                            Shuffle cards when studying
+                        </label>
+                        <div id="deck-shuffle-help" class="sr-only">When enabled, cards are shown in random order during study and quiz. Disable to keep cards in their original order.</div>
+                    </div>
+
                     <div class="button-group" style="margin-top: 20px;">
                         <button id="back-to-decks-btn" type="button" class="secondary-btn" aria-label="Back to Decks - discard and return to deck list">Back to Decks</button>
                     </div>
@@ -2217,7 +2238,7 @@ Mitochondria are the powerhouses of the cell."></textarea>
                 <h2>Deck Actions</h2>
                 <p>Each deck has Study and Quiz buttons:</p>
                 <ul>
-                    <li><strong>Study:</strong> Flip through shuffled flashcards at your own pace</li>
+                    <li><strong>Study:</strong> Flip through flashcards at your own pace (shuffled by default, or in order if shuffle is disabled)</li>
                     <li><strong>Quiz:</strong> Test yourself with multiple choice, written answers, or mixed mode</li>
                 </ul>
                 <p>Click the ⋮ menu button for more options:</p>
@@ -2277,7 +2298,7 @@ Mitochondria are the powerhouses of the cell."></textarea>
                 <h2>Studying Cards</h2>
                 <ul>
                     <li>Select a deck from "My Decks", then choose "Study".</li>
-                    <li>Cards are automatically shuffled for better learning.</li>
+                    <li>Cards are shuffled by default. You can disable shuffle per deck to keep cards in order.</li>
                     <li>Use Flip to switch between front and back.</li>
                     <li>Use Previous/Next or arrow keys to move through cards.</li>
                     <li>Progress updates are announced and shown visually.</li>
