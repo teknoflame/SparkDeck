@@ -360,7 +360,9 @@ class SparkDeckApp {
             }
 
             // Global navigation hotkeys (only when not typing and no modal/overlay open)
-            if (!isTyping && !isModalOpen && !this.isHelpOpen() && !this.quizMode) {
+            // Skip if a browser/OS modifier is held (Alt, Ctrl, Meta) to avoid
+            // conflicting with browser shortcuts like Alt+D (address bar) or Ctrl+D (bookmark)
+            if (!isTyping && !isModalOpen && !this.isHelpOpen() && !this.quizMode && !e.altKey && !e.ctrlKey && !e.metaKey) {
                 switch(e.key.toLowerCase()) {
                     case 'd':
                         // Go to My Decks tab
